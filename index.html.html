@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Моя библиотека</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2a1f35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Библиотека">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: linear-gradient(160deg, #1e1628 0%, #2a1f35 50%, #1a141f 100%);
+    min-height: 100vh;
+    padding: 20px 15px 200px;
+    color: #e8d9e8;
+    overflow-x: hidden;
+  }
+
+  /* Надпись в углу */
+  .corner-note {
+    position: fixed;
+    top: 15px;
+    right: 20px;
+    font-size: 13px;
+    font-style: italic;
+    color: #d8a8c8;
+    background: rgba(70, 45, 70, 0.75);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid #5a3d5a;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    z-index: 300;
+    letter-spacing: 0.3px;
+    max-width: 60vw;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #f0c8e0;
+    text-shadow: 
+      0 0 15px rgba(220, 130, 190, 0.5),
+      0 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: 1px;
+  }
+
+  /* ===== ВКЛАДКИ ===== */
+  .tabs {
+    max-width: 700px;
+    margin: 0 auto 25px;
+    display: flex;
+    gap: 8px;
+    background: rgba(45, 34, 56, 0.7);
+    padding: 6px;
+    border-radius: 16px;
+    border: 1px solid #4a3a58;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 10;
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    background: transparent;
+    color: #a890b0;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 11px;
+    transition: all 0.25s;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  .tab-btn:hover { color: #e0b8d8; }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, #b8559a 0%, #7a5eb5 100%);
+    color: white;
+    box-shadow: 0 4px 14px rgba(180, 90, 160, 0.5);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .tab-content { display: none; animation: fadeIn 0.3s ease; }
+  .tab-content.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #a890b0;
+    margin-bottom: 22px;
+    font-style: italic;
+    font-size: 0.95em;
+  }
+
+  .input-area {
+    max-width: 620px;
+    margin: 0 auto 30px;
+    display: flex;
+    gap: 8px;
+    background: #2d2238;
+    padding: 12px;
+    border-radius: 18px;
+    box-shadow: 
+      0 8px 25px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    border: 2px solid #4a3a58;
+  }
+
+  #bookInput {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 16px;
+    border: 2px solid #4a3a58;
+    border-radius: 12px;
+    font-size: 16px;
+    background: #1e1628;
+    font-family: inherit;
+    outline: none;
+    color: #f0e0f0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #bookInput::placeholder { color: #7a6888; }
+  #bookInput:focus {
+    border-color: #c884c0;
+    box-shadow: 0 0 0 4px rgba(200, 130, 200, 0.2);
+  }
+
+  button.add-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #b8559a 0%, #7a5eb5 100%);
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 14px rgba(180, 90, 160, 0.4);
+    white-space: nowrap;
+  }
+  button.add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(200, 100, 180, 0.6);
+  }
+  button.add-btn:active { transform: translateY(0); }
+
+  /* Кнопка «Поделиться» */
+  .share-wrap {
+    max-width: 620px;
+    margin: 0 auto 30px;
+    text-align: center;
+  }
+
+  .share-btn {
+    padding: 12px 26px;
+    border: 2px solid #7a5eb5;
+    background: rgba(122, 94, 181, 0.15);
+    color: #d8b8f0;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .share-btn:hover {
+    background: rgba(122, 94, 181, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(122, 94, 181, 0.4);
+  }
+
+  /* ===== БИБЛИОТЕКА ===== */
+  .library {
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .bookcase {
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+    background: linear-gradient(180deg, #2a1f35 0%, #221830 100%);
+    border-radius: 14px 14px 8px 8px;
+    padding: 16px 16px 0;
+    box-shadow: 
+      inset 0 0 60px rgba(0, 0, 0, 0.4),
+      0 12px 30px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    border: 3px solid #3d2e4a;
+    border-bottom: 8px solid #1a1220;
+    position: relative;
+  }
+
+  .case-title {
+    text-align: center;
+    font-size: 1.1em;
+    color: #e0b8d8;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px dashed #4a3a58;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .counter {
+    font-size: 0.7em;
+    background: linear-gradient(135deg, #b8559a, #7a5eb5);
+    color: white;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-family: sans-serif;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(180, 90, 160, 0.5);
+  }
+
+  .shelf {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 3px;
+    min-height: 125px;
+    padding: 0 4px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .shelf::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 11px;
+    background: linear-gradient(180deg, #5a3f52 0%, #3d2838 60%, #1a1220 100%);
+    border-radius: 3px;
+    box-shadow: 
+      0 4px 10px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 200, 230, 0.15);
+    z-index: 0;
+  }
+
+  .shelf-wrapper { margin-bottom: 4px; }
+
+  .book {
+    position: relative;
+    width: 34px;
+    height: 108px;
+    border-radius: 2px 4px 4px 2px;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'Georgia', serif;
+    letter-spacing: 0.3px;
+    z-index: 1;
+    margin-bottom: 11px;
+    box-shadow: 
+      inset -3px 0 6px rgba(0, 0, 0, 0.4),
+      inset 3px 0 3px rgba(255, 255, 255, 0.15),
+      2px 3px 6px rgba(0, 0, 0, 0.5);
+    border-left: 2px solid rgba(255, 255, 255, 0.15);
+    color: #f5e8f5;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.15;
+    padding: 6px 2px;
+    overflow: hidden;
+  }
+
+  .book > span {
+    max-height: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    word-break: break-word;
+  }
+
+  .book:hover {
+    transform: rotate(180deg) translateY(-8px);
+    box-shadow: 
+      inset -3px 0 6px rgba(0, 0, 0, 0.4),
+      inset 3px 0 3px rgba(255, 255, 255, 0.15),
+      4px 10px 18px rgba(0, 0, 0, 0.7),
+      0 0 15px rgba(220, 140, 200, 0.3);
+    z-index: 10;
+  }
+
+  .book.read {
+    color: #2a1a10;
+    background: linear-gradient(135deg, #e8a860 0%, #d97aa8 100%) !important;
+    box-shadow: 
+      inset -3px 0 6px rgba(0, 0, 0, 0.25),
+      inset 3px 0 3px rgba(255, 255, 255, 0.4),
+      0 0 22px rgba(232, 168, 96, 0.8),
+      0 0 14px rgba(217, 122, 168, 0.6),
+      2px 3px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  .book.read::before {
+    content: '✓';
+    position: absolute;
+    top: 4px;
+    left: 3px;
+    background: linear-gradient(135deg, #7fd9a8, #4aa87a);
+    color: white;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(180deg);
+    font-family: sans-serif;
+    font-weight: bold;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+  }
+
+  .delete-btn {
+    position: absolute;
+    top: -7px;
+    right: -5px;
+    transform: rotate(180deg);
+    background: linear-gradient(135deg, #d94a6a, #a83050);
+    color: white;
+    border: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    font-family: sans-serif;
+    font-weight: bold;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    z-index: 15;
+  }
+  .book:hover .delete-btn,
+  .book:active .delete-btn { opacity: 1; }
+  .delete-btn:hover { transform: rotate(180deg) scale(1.2); }
+
+  .empty-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #6a5a75;
+    font-style: italic;
+    font-size: 0.85em;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* ===== ТРЕКЕР ===== */
+  .tracker-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .stats-panel {
+    background: linear-gradient(160deg, #2d2238 0%, #221830 100%);
+    border: 2px solid #4a3a58;
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 25px;
+    box-shadow: 
+      0 10px 30px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    text-align: center;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: rgba(30, 22, 40, 0.6);
+    border: 1px solid #4a3a58;
+    border-radius: 14px;
+    padding: 16px 10px;
+  }
+
+  .stat-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: #f0c8e0;
+    text-shadow: 0 0 15px rgba(220, 130, 190, 0.5);
+    font-family: 'Georgia', serif;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 0.85em;
+    color: #a890b0;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  .level-bar {
+    margin-top: 15px;
+  }
+
+  .level-name {
+    font-size: 1.15em;
+    color: #ffd966;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 12px rgba(255, 200, 80, 0.5);
+    margin-bottom: 8px;
+  }
+
+  .progress-track {
+    height: 12px;
+    background: #1a1220;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #4a3a58;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #b8559a, #e8a860, #ffd966);
+    border-radius: 6px;
+    transition: width 0.6s ease;
+    box-shadow: 0 0 15px rgba(232, 168, 96, 0.7);
+  }
+
+  .progress-text {
+    font-size: 0.8em;
+    color: #a890b0;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .months-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .month-card {
+    background: linear-gradient(160deg, #2d2238 0%, #221830 100%);
+    border: 2px solid #4a3a58;
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .month-card:hover {
+    border-color: #7a5eb5;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(122, 94, 181, 0.3);
+  }
+
+  .month-card.has-books {
+    border-color: #b8559a;
+    box-shadow: 
+      0 0 20px rgba(184, 85, 154, 0.3),
+      inset 0 0 30px rgba(184, 85, 154, 0.1);
+  }
+
+  .month-card.milestone {
+    border-color: #ffd966;
+    box-shadow: 
+      0 0 25px rgba(255, 217, 102, 0.5),
+      inset 0 0 30px rgba(255, 217, 102, 0.1);
+  }
+
+  .month-name {
+    font-size: 0.9em;
+    color: #e0b8d8;
+    margin-bottom: 8px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+
+  .month-input {
+    width: 60px;
+    padding: 6px;
+    border: 2px solid #4a3a58;
+    border-radius: 10px;
+    background: #1e1628;
+    color: #f0e0f0;
+    font-family: inherit;
+    font-size: 1.3em;
+    font-weight: bold;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .month-input:focus {
+    border-color: #c884c0;
+    box-shadow: 0 0 0 3px rgba(200, 130, 200, 0.25);
+  }
+
+  .month-points {
+    font-size: 0.75em;
+    color: #a890b0;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .month-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    font-size: 16px;
+    animation: pop 0.4s ease;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+  }
+
+  /* Облачко с похвалой */
+  .praise-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.7);
+    background: linear-gradient(135deg, #b8559a, #7a5eb5);
+    color: white;
+    padding: 22px 36px;
+    border-radius: 22px;
+    font-size: 1.15em;
+    font-weight: bold;
+    font-family: 'Georgia', serif;
+    text-align: center;
+    box-shadow: 
+      0 20px 50px rgba(0, 0, 0, 0.7),
+      0 0 40px rgba(232, 168, 96, 0.6);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 2px solid rgba(255, 217, 102, 0.5);
+    max-width: 80vw;
+  }
+
+  .praise-popup.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .praise-popup .praise-emoji {
+    display: block;
+    font-size: 2em;
+    margin-bottom: 8px;
+  }
+
+  /* ===== ЦИТАТЫ ===== */
+  .quotes-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .quote-form {
+    background: linear-gradient(160deg, #2d2238 0%, #221830 100%);
+    border: 2px solid #4a3a58;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .quote-form label {
+    display: block;
+    color: #e0b8d8;
+    font-size: 0.85em;
+    margin-bottom: 6px;
+    font-style: italic;
+    letter-spacing: 0.3px;
+  }
+
+  .quote-form textarea,
+  .quote-form input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid #4a3a58;
+    border-radius: 12px;
+    background: #1e1628;
+    color: #f0e0f0;
+    font-family: 'Georgia', serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    resize: vertical;
+  }
+
+  .quote-form textarea:focus,
+  .quote-form input:focus {
+    border-color: #c884c0;
+    box-shadow: 0 0 0 4px rgba(200, 130, 200, 0.2);
+  }
+
+  .quote-form textarea {
+    min-height: 100px;
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .form-row {
+    margin-bottom: 14px;
+  }
+
+  .form-row.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .style-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .style-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: sans-serif;
+    color: white;
+    transition: all 0.2s;
+    font-weight: bold;
+  }
+
+  .style-chip:hover { transform: translateY(-2px); }
+  .style-chip.selected {
+    border-color: #ffd966;
+    box-shadow: 0 0 12px rgba(255, 217, 102, 0.6);
+  }
+
+  .quotes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 18px;
+  }
+
+  .quote-card {
+    position: relative;
+    border-radius: 16px;
+    padding: 22px 20px 18px;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    transition: transform 0.25s, box-shadow 0.25s;
+    font-family: 'Georgia', serif;
+    overflow: hidden;
+  }
+
+  .quote-card:hover {
+    transform: translateY(-5px) rotate(-0.5deg);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+  }
+
+  .quote-card::before {
+    content: '❝';
+    position: absolute;
+    top: 5px;
+    left: 12px;
+    font-size: 3em;
+    opacity: 0.25;
+    font-family: serif;
+    line-height: 1;
+  }
+
+  .quote-text {
+    font-size: 15px;
+    line-height: 1.6;
+    font-style: italic;
+    margin-bottom: 15px;
+    position: relative;
+    z-index: 1;
+    word-break: break-word;
+  }
+
+  .quote-source {
+    font-size: 0.8em;
+    opacity: 0.8;
+    text-align: right;
+    font-style: normal;
+    letter-spacing: 0.3px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .quote-source::before {
+    content: '— ';
+  }
+
+  .quote-delete {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: 12px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-family: sans-serif;
+    font-weight: bold;
+    z-index: 5;
+  }
+
+  .quote-card:hover .quote-delete { opacity: 1; }
+
+  .no-quotes {
+    text-align: center;
+    color: #6a5a75;
+    font-style: italic;
+    padding: 40px 20px;
+    font-size: 0.95em;
+  }
+
+  /* Стили цитат */
+  .style-sunset { background: linear-gradient(135deg, #d97aa8 0%, #b8559a 100%); color: #fff; }
+  .style-night { background: linear-gradient(135deg, #2a3a5e 0%, #1a2238 100%); color: #d8e0f0; }
+  .style-parchment { background: linear-gradient(135deg, #f0e0c0 0%, #e0c8a0 100%); color: #4a3520; }
+  .style-emerald { background: linear-gradient(135deg, #2a7a5a 0%, #155a3e 100%); color: #e0f5ea; }
+  .style-wine { background: linear-gradient(135deg, #7a2a3a 0%, #4a1520 100%); color: #f0d8d8; }
+  .style-lavender { background: linear-gradient(135deg, #8a6ab5 0%, #5a3e8a 100%); color: #f0e0ff; }
+
+  /* ===== КОТЁНОК ===== */
+  .cat-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 170px;
+    pointer-events: none;
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding-left: 25px;
+  }
+
+  .cat-container {
+    position: relative;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: catBob 3s ease-in-out infinite;
+  }
+
+  @keyframes catBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  .speech-bubble {
+    position: absolute;
+    bottom: 105px;
+    left: 60px;
+    background: #2d2238;
+    border: 2px solid #6a4a70;
+    border-radius: 16px;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #f0c8e8;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    white-space: nowrap;
+    box-shadow: 
+      0 6px 20px rgba(0, 0, 0, 0.6),
+      0 0 15px rgba(200, 100, 180, 0.2);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  }
+  .speech-bubble.show { opacity: 1; transform: translateY(0); }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 20px;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 12px solid #2d2238;
+  }
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    left: 18px;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 14px solid #6a4a70;
+    z-index: -1;
+  }
+
+  .cat { width: 120px; height: 130px; position: relative; }
+
+  .cat-body {
+    position: absolute;
+    bottom: 0;
+    left: 15px;
+    width: 90px;
+    height: 70px;
+    background: linear-gradient(160deg, #8a7a9a 0%, #5a4a6a 100%);
+    border-radius: 45px 45px 25px 25px;
+    box-shadow: 
+      inset -8px -5px 15px rgba(0, 0, 0, 0.4),
+      inset 5px 5px 10px rgba(255, 255, 255, 0.15),
+      0 6px 18px rgba(0, 0, 0, 0.6);
+  }
+
+  .cat-head {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    width: 80px;
+    height: 72px;
+    background: linear-gradient(160deg, #8a7a9a 0%, #5a4a6a 100%);
+    border-radius: 50% 50% 45% 45%;
+    box-shadow: 
+      inset -6px -4px 12px rgba(0, 0, 0, 0.4),
+      inset 5px 5px 8px rgba(255, 255, 255, 0.15);
+  }
+
+  .cat-ear {
+    position: absolute;
+    top: 5px;
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-bottom: 28px solid #5a4a6a;
+    filter: drop-shadow(-2px -2px 3px rgba(0, 0, 0, 0.4));
+  }
+  .cat-ear.left { left: 18px; transform: rotate(-15deg); }
+  .cat-ear.right { right: 18px; transform: rotate(15deg); }
+  .cat-ear::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: -8px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 14px solid #c88aa8;
+  }
+
+  .cat-eye {
+    position: absolute;
+    top: 32px;
+    width: 14px;
+    height: 16px;
+    background: radial-gradient(circle at 30% 30%, #7fd9d9, #2a4a5a);
+    border-radius: 50%;
+    transition: transform 0.15s;
+    box-shadow: 0 0 8px rgba(127, 217, 217, 0.6);
+  }
+  .cat-eye::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    width: 5px;
+    height: 5px;
+    background: white;
+    border-radius: 50%;
+  }
+  .cat-eye.left { left: 18px; }
+  .cat-eye.right { right: 18px; }
+
+  .cat-nose {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #e890b8;
+  }
+
+  .cat-mouth {
+    position: absolute;
+    top: 55px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 8px;
+    border-bottom: 2px solid #c884a8;
+    border-radius: 0 0 50% 50%;
+  }
+
+  .cat-blush {
+    position: absolute;
+    top: 45px;
+    width: 12px;
+    height: 8px;
+    background: radial-gradient(ellipse, rgba(220, 130, 180, 0.5), transparent);
+    border-radius: 50%;
+  }
+  .cat-blush.left { left: 8px; }
+  .cat-blush.right { right: 8px; }
+
+  .cat-whisker {
+    position: absolute;
+    width: 18px;
+    height: 1px;
+    background: #b8a8c8;
+    top: 52px;
+  }
+  .cat-whisker.l1 { left: -6px; transform: rotate(-10deg); }
+  .cat-whisker.l2 { left: -6px; top: 58px; transform: rotate(8deg); }
+  .cat-whisker.r1 { right: -6px; transform: rotate(10deg); }
+  .cat-whisker.r2 { right: -6px; top: 58px; transform: rotate(-8deg); }
+
+  .cat-paw {
+    position: absolute;
+    bottom: 3px;
+    width: 22px;
+    height: 14px;
+    background: linear-gradient(180deg, #7a6a8a, #4a3a5a);
+    border-radius: 50% 50% 40% 40%;
+    box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.4);
+  }
+  .cat-paw.left { left: 22px; }
+  .cat-paw.right { right: 22px; }
+
+  .cat-tail {
+    position: absolute;
+    bottom: 10px;
+    right: -12px;
+    width: 40px;
+    height: 40px;
+    border: 8px solid #5a4a6a;
+    border-color: transparent transparent #5a4a6a transparent;
+    border-radius: 50%;
+    transform: rotate(-45deg);
+    animation: tailWag 2s ease-in-out infinite;
+    transform-origin: left bottom;
+  }
+  @keyframes tailWag {
+    0%, 100% { transform: rotate(-45deg); }
+    50% { transform: rotate(-25deg); }
+  }
+
+  .heart {
+    position: fixed;
+    font-size: 18px;
+    animation: heartFloat 1.2s ease-out forwards;
+    pointer-events: none;
+    z-index: 200;
+  }
+  @keyframes heartFloat {
+    0% { opacity: 1; transform: translateY(0) scale(0.8); }
+    100% { opacity: 0; transform: translateY(-80px) scale(1.4); }
+  }
+
+  @media (max-width: 700px) {
+    body { padding: 60px 10px 180px; }
+    h1 { font-size: 1.6em; }
+    .library { flex-direction: column; align-items: center; }
+    .bookcase { width: 100%; max-width: 100%; min-width: auto; }
+    .cat-area { padding-left: 15px; height: 150px; }
+    .cat { transform: scale(0.85); }
+    .speech-bubble { bottom: 90px; left: 50px; font-size: 12px; }
+    .book { width: 30px; height: 100px; }
+    .corner-note {
+      font-size: 11px;
+      top: 8px;
+      right: 8px;
+      padding: 6px 12px;
+      max-width: 70vw;
+    }
+    .tab-btn { font-size: 12px; padding: 10px 4px; }
+    .form-row.two-col { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .months-grid { grid-template-columns: repeat(3, 1fr); }
+    .month-card { padding: 10px 6px; }
+    .month-input { width: 50px; font-size: 1.1em; }
+    .quotes-grid { grid-template-columns: 1fr; }
+  }
+
+  .hint {
+    text-align: center;
+    color: #8a7a95;
+    font-size: 0.85em;
+    margin-top: 20px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+  <div class="corner-note">для любителей порнушных книг</div>
+
+  <h1>📚 Моя библиотека</h1>
+
+  <!-- Вкладки -->
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="library">📚 Библиотека</button>
+    <button class="tab-btn" data-tab="tracker">📊 Трекер</button>
+    <button class="tab-btn" data-tab="quotes">💬 Цитаты</button>
+  </nav>
+
+  <!-- ====== ВКЛАДКА: БИБЛИОТЕКА ====== -->
+  <div class="tab-content active" id="tab-library">
+    <p class="subtitle">Добавляй книги — они встанут на полки ✨</p>
+
+    <div class="input-area">
+      <input type="text" id="bookInput" placeholder="Название книги..." maxlength="60">
+      <button class="add-btn" onclick="addBook()">Добавить</button>
+    </div>
+
+    <div class="library">
+      <div class="bookcase" id="unreadCase">
+        <div class="case-title">
+          📖 Непрочитанные
+          <span class="counter" id="unreadCount">0</span>
+        </div>
+      </div>
+      <div class="bookcase" id="readCase">
+        <div class="case-title">
+          ✨ Прочитанные
+          <span class="counter" id="readCount">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="share-wrap">
+      <button class="share-btn" onclick="shareLibrary()">🔗 Поделиться полкой</button>
+    </div>
+
+    <p class="hint">Кликни на книгу — отметить прочитанной. Наведи и нажми ✕ — удалить.</p>
+  </div>
+
+  <!-- ====== ВКЛАДКА: ТРЕКЕР ====== -->
+  <div class="tab-content" id="tab-tracker">
+    <p class="subtitle">Отмечай сколько книг прочитала за каждый месяц 📖</p>
+
+    <div class="tracker-container">
+      <div class="stats-panel">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="yearBooks">0</div>
+            <div class="stat-label">книг за год</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalPoints">0</div>
+            <div class="stat-label">баллов</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="bestMonth">—</div>
+            <div class="stat-label">лучший месяц</div>
+          </div>
+        </div>
+
+        <div class="level-bar">
+          <div class="level-name" id="levelName">🌱 Новичок</div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text" id="progressText">До следующего уровня: 100 баллов</div>
+        </div>
+      </div>
+
+      <div class="months-grid" id="monthsGrid"></div>
+    </div>
+
+    <p class="hint">💡 1 книга = 10 баллов. За 5+ книг в месяц — бонус 50, за 10+ — 150, за 20+ — 400!</p>
+  </div>
+
+  <!-- ====== ВКЛАДКА: ЦИТАТЫ ====== -->
+  <div class="tab-content" id="tab-quotes">
+    <p class="subtitle">Сохраняй любимые цитаты и оформляй их красиво 💬</p>
+
+    <div class="quotes-container">
+      <div class="quote-form">
+        <div class="form-row">
+          <label>Цитата</label>
+          <textarea id="quoteText" placeholder="Введите текст цитаты..."></textarea>
+        </div>
+
+        <div class="form-row two-col">
+          <div>
+            <label>Книга</label>
+            <input type="text" id="quoteBook" placeholder="Название" maxlength="60">
+          </div>
+          <div>
+            <label>Автор</label>
+            <input type="text" id="quoteAuthor" placeholder="Автор" maxlength="60">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Стиль оформления</label>
+          <div class="style-picker" id="stylePicker">
+            <span class="style-chip selected" data-style="style-sunset" style="background: linear-gradient(135deg, #d97aa8, #b8559a);">Закат</span>
+            <span class="style-chip" data-style="style-night" style="background: linear-gradient(135deg, #2a3a5e, #1a2238);">Ночь</span>
+            <span class="style-chip" data-style="style-parchment" style="background: linear-gradient(135deg, #f0e0c0, #e0c8a0); color: #4a3520;">Пергамент</span>
+            <span class="style-chip" data-style="style-emerald" style="background: linear-gradient(135deg, #2a7a5a, #155a3e);">Изумруд</span>
+            <span class="style-chip" data-style="style-wine" style="background: linear-gradient(135deg, #7a2a3a, #4a1520);">Вино</span>
+            <span class="style-chip" data-style="style-lavender" style="background: linear-gradient(135deg, #8a6ab5, #5a3e8a);">Лаванда</span>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-bottom: 0;">
+          <button class="add-btn" onclick="addQuote()" style="width: 100%;">Добавить цитату</button>
+        </div>
+      </div>
+
+      <div class="quotes-grid" id="quotesGrid"></div>
+    </div>
+  </div>
+
+  <!-- Котёнок (только на вкладке Библиотека) -->
+  <div class="cat-area" id="catArea">
+    <div class="cat-container" id="catContainer">
+      <div class="speech-bubble" id="bubble"></div>
+      <div class="cat">
+        <div class="cat-tail"></div>
+        <div class="cat-body"></div>
+        <div class="cat-paw left"></div>
+        <div class="cat-paw right"></div>
+        <div class="cat-head">
+          <div class="cat-ear left"></div>
+          <div class="cat-ear right"></div>
+          <div class="cat-eye left"></div>
+          <div class="cat-eye right"></div>
+          <div class="cat-blush left"></div>
+          <div class="cat-blush right"></div>
+          <div class="cat-whisker l1"></div>
+          <div class="cat-whisker l2"></div>
+          <div class="cat-whisker r1"></div>
+          <div class="cat-whisker r2"></div>
+          <div class="cat-nose"></div>
+          <div class="cat-mouth"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Попап с похвалой -->
+  <div class="praise-popup" id="praisePopup"></div>
+
+<script>
+  // ===== ПАЛИТРЫ =====
+  const PASTEL_COLORS = [
+    'linear-gradient(180deg, #8a3a68, #5a2348)',
+    'linear-gradient(180deg, #3a5a8a, #1f3a5e)',
+    'linear-gradient(180deg, #6a4a9a, #422868)',
+    'linear-gradient(180deg, #2a7a5a, #155a3e)',
+    'linear-gradient(180deg, #a85a3a, #6e3a20)',
+    'linear-gradient(180deg, #9a3a3a, #5e2020)',
+    'linear-gradient(180deg, #3a6a8a, #1f4a5e)',
+    'linear-gradient(180deg, #7a3a8a, #4a1e5e)',
+    'linear-gradient(180deg, #3a7a3a, #1e5a1e)',
+    'linear-gradient(180deg, #8a5a2a, #5e3a10)',
+    'linear-gradient(180deg, #4a4a8a, #2a2a5e)',
+    'linear-gradient(180deg, #8a3a7a, #5a1e4e)',
+  ];
+
+  const BOOKS_PER_SHELF = 10;
+  const MIN_SHELVES = 4;
+
+  const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+  // ===== ХРАНИЛИЩЕ =====
+  let books = JSON.parse(localStorage.getItem('myBooksLibrary')) || [];
+  let tracker = JSON.parse(localStorage.getItem('myBookTracker')) || {};
+  let quotes = JSON.parse(localStorage.getItem('myQuotes')) || [];
+
+  function saveBooks() { localStorage.setItem('myBooksLibrary', JSON.stringify(books)); }
+  function saveTracker() { localStorage.setItem('myBookTracker', JSON.stringify(tracker)); }
+  function saveQuotes() { localStorage.setItem('myQuotes', JSON.stringify(quotes)); }
+
+  // ===== ВКЛАДКИ =====
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+
+      // Котёнок только на вкладке библиотека
+      document.getElementById('catArea').style.display = (tab === 'library') ? 'flex' : 'none';
+
+      if (tab === 'tracker') renderTracker();
+    });
+  });
+
+  // ===== БИБЛИОТЕКА =====
+  function addBook() {
+    const input = document.getElementById('bookInput');
+    const title = input.value.trim();
+    if (!title) return;
+
+    books.push({
+      id: Date.now(),
+      title: title,
+      read: false,
+      colorIndex: Math.floor(Math.random() * PASTEL_COLORS.length)
+    });
+
+    input.value = '';
+    input.focus();
+    saveBooks();
+    renderBooks();
+    showBubble(['Ура!', 'Новая книга!', 'Мур~', 'Класс!', 'Люблю читать!'][Math.floor(Math.random()*5)]);
+  }
+
+  function toggleRead(id) {
+    const book = books.find(b => b.id === id);
+    if (book) {
+      book.read = !book.read;
+      saveBooks();
+      renderBooks();
+      if (book.read) {
+        showBubble(['Молодец!', 'Прочитано!', 'Умница~', 'Мур-мур!'][Math.floor(Math.random()*4)]);
+      }
+    }
+  }
+
+  function deleteBook(id, event) {
+    event.stopPropagation();
+    books = books.filter(b => b.id !== id);
+    saveBooks();
+    renderBooks();
+    showBubble(['Ой...', 'Ладно~', 'Мяу?'][Math.floor(Math.random()*3)]);
+  }
+
+  function renderBooks() {
+    const unreadCase = document.getElementById('unreadCase');
+    const readCase = document.getElementById('readCase');
+
+    Array.from(unreadCase.querySelectorAll('.shelf-wrapper, .empty-hint')).forEach(el => el.remove());
+    Array.from(readCase.querySelectorAll('.shelf-wrapper, .empty-hint')).forEach(el => el.remove());
+
+    const unread = books.filter(b => !b.read);
+    const read = books.filter(b => b.read);
+
+    buildCase(unreadCase, unread);
+    buildCase(readCase, read);
+
+    document.getElementById('unreadCount').textContent = unread.length;
+    document.getElementById('readCount').textContent = read.length;
+  }
+
+  function buildCase(container, bookList) {
+    const shelves = [];
+    for (let i = 0; i < bookList.length; i += BOOKS_PER_SHELF) {
+      shelves.push(bookList.slice(i, i + BOOKS_PER_SHELF));
+    }
+    while (shelves.length < MIN_SHELVES) shelves.push([]);
+
+    shelves.forEach((shelfBooks, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'shelf-wrapper';
+      const shelf = document.createElement('div');
+      shelf.className = 'shelf';
+
+      if (shelfBooks.length === 0 && idx === 0 && bookList.length === 0) {
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.textContent = '— пусто —';
+        shelf.appendChild(hint);
+      }
+
+      shelfBooks.forEach(b => shelf.appendChild(createBookEl(b)));
+      wrapper.appendChild(shelf);
+      container.appendChild(wrapper);
+    });
+  }
+
+  function createBookEl(book) {
+    const el = document.createElement('div');
+    el.className = 'book' + (book.read ? ' read' : '');
+    el.style.background = PASTEL_COLORS[book.colorIndex] || PASTEL_COLORS[0];
+    el.title = book.title + (book.read ? ' (прочитано)' : '');
+
+    const span = document.createElement('span');
+    span.textContent = book.title;
+    el.appendChild(span);
+
+    const del = document.createElement('button');
+    del.className = 'delete-btn';
+    del.textContent = '✕';
+    del.onclick = (e) => deleteBook(book.id, e);
+    el.appendChild(del);
+
+    el.onclick = () => toggleRead(book.id);
+    return el;
+  }
+
+  // ===== ПОДЕЛИТЬСЯ ПОЛКОЙ =====
+  function shareLibrary() {
+    const read = books.filter(b => b.read);
+    const unread = books.filter(b => !b.read);
+
+    let text = '📚 Моя книжная полка — рекомендую!\n\n';
+
+    if (read.length > 0) {
+      text += '✨ Прочитано и рекомендую:\n';
+      read.slice(0, 20).forEach(b => text += `• ${b.title}\n`);
+      if (read.length > 20) text += `...и ещё ${read.length - 20}\n`;
+      text += '\n';
+    }
+
+    if (unread.length > 0) {
+      text += '📖 Хочу прочитать:\n';
+      unread.slice(0, 15).forEach(b => text += `• ${b.title}\n`);
+      if (unread.length > 15) text += `...и ещё ${unread.length - 15}\n`;
+    }
+
+    if (books.length === 0) {
+      text += 'Пока что полка пустая... но скоро пополнится!';
+    }
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'Моя книжная полка',
+        text: text
+      }).catch(err => {
+        if (err.name !== 'AbortError') copyToClipboard(text);
+      });
+    } else {
+      copyToClipboard(text);
+    }
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('✅ Скопировано! Вставь друзьям 💌');
+      }).catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast('✅ Скопировано! Вставь друзьям 💌'); }
+    catch(e) { showToast('❌ Не получилось скопировать'); }
+    ta.remove();
+  }
+
+  function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.cssText = `
+      position: fixed; bottom: 190px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, #b8559a, #7a5eb5); color: white;
+      padding: 12px 22px; border-radius: 14px; font-family: Georgia, serif;
+      font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      z-index: 2000; animation: fadeIn 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; }, 2200);
+    setTimeout(() => toast.remove(), 2600);
+  }
+
+  // ===== ТРЕКЕР =====
+  const LEVELS = [
+    { name: '🌱 Новичок', min: 0 },
+    { name: '📖 Читатель', min: 100 },
+    { name: '💫 Книголюб', min: 300 },
+    { name: '🔥 Знаток', min: 600 },
+    { name: '👑 Мастер', min: 1000 },
+    { name: '🌟 Легенда', min: 2000 },
+    { name: '🏆 Бессмертный', min: 5000 },
+  ];
+
+  function monthPoints(count) {
+    if (!count) return 0;
+    let pts = count * 10;
+    if (count >= 5) pts += 50;
+    if (count >= 10) pts += 150;
+    if (count >= 20) pts += 400;
+    return pts;
+  }
+
+  function renderTracker() {
+    const grid = document.getElementById('monthsGrid');
+    grid.innerHTML = '';
+
+    let yearTotal = 0;
+    let totalPoints = 0;
+    let bestMonthIdx = -1;
+    let bestMonthCount = 0;
+
+    MONTHS.forEach((m, i) => {
+      const count = tracker[i] || 0;
+      yearTotal += count;
+      totalPoints += monthPoints(count);
+      if (count > bestMonthCount) { bestMonthCount = count; bestMonthIdx = i; }
+
+      const card = document.createElement('div');
+      card.className = 'month-card';
+      if (count > 0) card.classList.add('has-books');
+      if (count >= 10) card.classList.add('milestone');
+
+      let badge = '';
+      if (count >= 20) badge = '👑';
+      else if (count >= 10) badge = '🔥';
+      else if (count >= 5) badge = '⭐';
+      else if (count > 0) badge = '📖';
+
+      card.innerHTML = `
+        ${badge ? `<span class="month-badge">${badge}</span>` : ''}
+        <div class="month-name">${m}</div>
+        <input type="number" class="month-input" min="0" max="99" value="${count}" data-month="${i}">
+        <div class="month-points">${monthPoints(count)} балл.</div>
+      `;
+
+      const input = card.querySelector('.month-input');
+      input.addEventListener('change', e => handleMonthChange(i, parseInt(e.target.value) || 0));
+
+      grid.appendChild(card);
+    });
+
+    document.getElementById('yearBooks').textContent = yearTotal;
+    document.getElementById('totalPoints').textContent = totalPoints;
+    document.getElementById('bestMonth').textContent = bestMonthIdx >= 0 ? MONTHS[bestMonthIdx] : '—';
+
+    // Уровень
+    let levelIdx = 0;
+    for (let i = 0; i < LEVELS.length; i++) {
+      if (totalPoints >= LEVELS[i].min) levelIdx = i;
+    }
+    const current = LEVELS[levelIdx];
+    const next = LEVELS[levelIdx + 1];
+
+    document.getElementById('levelName').textContent = current.name;
+
+    if (next) {
+      const range = next.min - current.min;
+      const done = totalPoints - current.min;
+      const pct = Math.min(100, (done / range) * 100);
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = `До «${next.name}»: ${next.min - totalPoints} баллов`;
+    } else {
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('progressText').textContent = '🎉 Максимальный уровень!';
+    }
+  }
+
+  function handleMonthChange(monthIdx, newCount) {
+    const oldCount = tracker[monthIdx] || 0;
+    tracker[monthIdx] = newCount;
+    saveTracker();
+    renderTracker();
+
+    // Похвала при росте
+    if (newCount > oldCount) {
+      const praises = [];
+      if (oldCount < 1 && newCount >= 1) praises.push({ e: '🌱', t: 'Первый шаг сделан!' });
+      if (oldCount < 5 && newCount >= 5) praises.push({ e: '⭐', t: '5 книг — отличный месяц!' });
+      if (oldCount < 10 && newCount >= 10) praises.push({ e: '🔥', t: '10 книг! Ты книжный монстр!' });
+      if (oldCount < 20 && newCount >= 20) praises.push({ e: '👑', t: '20 книг! Настоящая легенда!' });
+
+      if (praises.length > 0) {
+        const last = praises[praises.length - 1];
+        showPraise(last.e, last.t);
+      } else if (newCount > oldCount) {
+        const small = ['Молодец! 💖', 'Так держать! ✨', 'Ещё одна книга! 📖', 'Супер! 🌟'];
+        showPraise('👏', small[Math.floor(Math.random() * small.length)]);
+      }
+    }
+  }
+
+  let praiseTimer = null;
+  function showPraise(emoji, text) {
+    const popup = document.getElementById('praisePopup');
+    popup.innerHTML = `<span class="praise-emoji">${emoji}</span>${text}`;
+    popup.classList.add('show');
+    clearTimeout(praiseTimer);
+    praiseTimer = setTimeout(() => popup.classList.remove('show'), 2000);
+  }
+
+  // ===== ЦИТАТЫ =====
+  let selectedStyle = 'style-sunset';
+
+  document.querySelectorAll('.style-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.style-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      selectedStyle = chip.dataset.style;
+    });
+  });
+
+  function addQuote() {
+    const text = document.getElementById('quoteText').value.trim();
+    const book = document.getElementById('quoteBook').value.trim();
+    const author = document.getElementById('quoteAuthor').value.trim();
+
+    if (!text) return;
+
+    quotes.push({
+      id: Date.now(),
+      text: text,
+      book: book,
+      author: author,
+      style: selectedStyle
+    });
+
+    document.getElementById('quoteText').value = '';
+    document.getElementById('quoteBook').value = '';
+    document.getElementById('quoteAuthor').value = '';
+    saveQuotes();
+    renderQuotes();
+  }
+
+  function deleteQuote(id, event) {
+    event.stopPropagation();
+    quotes = quotes.filter(q => q.id !== id);
+    saveQuotes();
+    renderQuotes();
+  }
+
+  function renderQuotes() {
+    const grid = document.getElementById('quotesGrid');
+    grid.innerHTML = '';
+
+    if (quotes.length === 0) {
+      grid.innerHTML = '<div class="no-quotes" style="grid-column: 1 / -1;">💬 Пока нет цитат. Добавь первую!</div>';
+      return;
+    }
+
+    quotes.forEach(q => {
+      const card = document.createElement('div');
+      card.className = 'quote-card ' + q.style;
+
+      let source = '';
+      if (q.book && q.author) source = `${q.author}, «${q.book}»`;
+      else if (q.book) source = `«${q.book}»`;
+      else if (q.author) source = q.author;
+
+      card.innerHTML = `
+        <button class="quote-delete" onclick="deleteQuote(${q.id}, event)">✕</button>
+        <div class="quote-text">${escapeHtml(q.text)}</div>
+        ${source ? `<div class="quote-source">${escapeHtml(source)}</div>` : ''}
+      `;
+
+      grid.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[c]);
+  }
+
+  // ===== КОТЁНОК =====
+  const PHRASES_IDLE = [
+    'Привет!', 'Мур~', 'Мяу!', 'Читаешь?', 'Ещё книгу?',
+    'Люблю книги', 'Как дела?', 'Приветик!', 'Мур-мур',
+    'Что читаешь?', 'Мяу-мяу', 'Скучно~'
+  ];
+
+  let bubbleTimer = null;
+
+  function showBubble(text) {
+    const bubble = document.getElementById('bubble');
+    bubble.textContent = text;
+    bubble.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => bubble.classList.remove('show'), 2200);
+  }
+
+  setInterval(() => {
+    if (Math.random() < 0.5 && document.getElementById('tab-library').classList.contains('active')) {
+      showBubble(PHRASES_IDLE[Math.floor(Math.random() * PHRASES_IDLE.length)]);
+    }
+  }, 7000);
+
+  document.getElementById('catContainer').addEventListener('click', function(e) {
+    showBubble(['Мяу!', 'Мур~', 'Привет!', 'Хи-хи', 'Гладишь?'][Math.floor(Math.random()*5)]);
+    this.style.animation = 'none';
+    setTimeout(() => { this.style.animation = 'catBob 3s ease-in-out infinite'; }, 10);
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => spawnHeart(e.clientX, e.clientY), i * 120);
+    }
+  });
+
+  function spawnHeart(x, y) {
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+    heart.textContent = ['💖', '💕', '💗', '🌸'][Math.floor(Math.random()*4)];
+    heart.style.left = (x - 10 + Math.random() * 30 - 15) + 'px';
+    heart.style.top = (y - 20) + 'px';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 1200);
+  }
+
+  setTimeout(() => showBubble('Привет!'), 600);
+
+  document.getElementById('bookInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addBook();
+  });
+
+  // ===== ИНИЦИАЛИЗАЦИЯ =====
+  renderBooks();
+  renderTracker();
+  renderQuotes();
+
+  // ===== PWA =====
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>
