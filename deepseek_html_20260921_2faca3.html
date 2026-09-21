@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Моя библиотека</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#b57ea4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Библиотека">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: linear-gradient(160deg, #fef6fb 0%, #eef6ff 50%, #f0fbf6 100%);
+    min-height: 100vh;
+    padding: 20px 15px 200px;
+    color: #5a4a5e;
+    overflow-x: hidden;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 6px;
+    color: #b57ea4;
+    text-shadow: 1px 2px 4px rgba(255, 200, 230, 0.5);
+    letter-spacing: 1px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #a89ab0;
+    margin-bottom: 22px;
+    font-style: italic;
+    font-size: 0.95em;
+  }
+
+  .input-area {
+    max-width: 620px;
+    margin: 0 auto 30px;
+    display: flex;
+    gap: 8px;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(200, 160, 200, 0.25);
+    border: 2px solid #f4e1ef;
+  }
+
+  #bookInput {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 16px;
+    border: 2px solid #f0d5e8;
+    border-radius: 12px;
+    font-size: 16px;
+    background: #fefaff;
+    font-family: inherit;
+    outline: none;
+    color: #5a4a5e;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  #bookInput::placeholder { color: #c9b8d0; }
+  #bookInput:focus {
+    border-color: #e5b3d8;
+    box-shadow: 0 0 0 4px rgba(240, 200, 230, 0.3);
+  }
+
+  button.add-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f7b8d9 0%, #b8d4f7 100%);
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(150, 100, 150, 0.3);
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(220, 170, 220, 0.4);
+    white-space: nowrap;
+  }
+  button.add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(220, 170, 220, 0.5);
+  }
+
+  .library {
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .bookcase {
+    flex: 1;
+    min-width: 300px;
+    max-width: 500px;
+    background: linear-gradient(180deg, #fdf5fa 0%, #f5eaf5 100%);
+    border-radius: 14px 14px 8px 8px;
+    padding: 16px 16px 0;
+    box-shadow: 
+      inset 0 0 40px rgba(220, 190, 220, 0.2),
+      0 12px 30px rgba(200, 170, 200, 0.25);
+    border: 3px solid #f0dcec;
+    border-bottom: 8px solid #e8c8e0;
+    position: relative;
+  }
+
+  .case-title {
+    text-align: center;
+    font-size: 1.1em;
+    color: #a56c96;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px dashed #f0d5e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .counter {
+    font-size: 0.7em;
+    background: linear-gradient(135deg, #f7c5e0, #c5d8f5);
+    color: white;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-family: sans-serif;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(200, 160, 200, 0.3);
+    text-shadow: 0 1px 2px rgba(150, 100, 150, 0.3);
+  }
+
+  .shelf {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 3px;
+    min-height: 125px;
+    padding: 0 4px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .shelf::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 11px;
+    background: linear-gradient(180deg, #fce8f3 0%, #e8c8e0 50%, #d4a8cc 100%);
+    border-radius: 3px;
+    box-shadow: 
+      0 4px 8px rgba(180, 140, 180, 0.3),
+      inset 0 1px 0 rgba(255,255,255,0.9);
+    z-index: 0;
+  }
+
+  .shelf-wrapper { margin-bottom: 4px; }
+
+  .book {
+    position: relative;
+    width: 34px;
+    height: 108px;
+    border-radius: 2px 4px 4px 2px;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'Georgia', serif;
+    letter-spacing: 0.3px;
+    z-index: 1;
+    margin-bottom: 11px;
+    box-shadow: 
+      inset -3px 0 6px rgba(150, 120, 150, 0.15),
+      inset 3px 0 3px rgba(255, 255, 255, 0.7),
+      2px 2px 4px rgba(160, 120, 160, 0.25);
+    border-left: 2px solid rgba(255,255,255,0.6);
+    color: #5a4a5e;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.15;
+    padding: 6px 2px;
+    overflow: hidden;
+  }
+
+  .book > span {
+    max-height: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.6);
+    word-break: break-word;
+  }
+
+  .book:hover {
+    transform: rotate(180deg) translateY(-8px);
+    box-shadow: 
+      inset -3px 0 6px rgba(150, 120, 150, 0.15),
+      inset 3px 0 3px rgba(255, 255, 255, 0.7),
+      4px 8px 14px rgba(160, 120, 160, 0.4);
+    z-index: 10;
+  }
+
+  .book.read {
+    color: #8a5a3a;
+    background: linear-gradient(135deg, #ffe0b3 0%, #ffc8d8 100%) !important;
+    box-shadow: 
+      inset -3px 0 6px rgba(200, 150, 100, 0.2),
+      inset 3px 0 3px rgba(255, 255, 255, 0.8),
+      0 0 18px rgba(255, 200, 150, 0.9),
+      0 0 10px rgba(255, 180, 210, 0.7),
+      2px 2px 4px rgba(160, 120, 160, 0.25);
+  }
+
+  .book.read::before {
+    content: '✓';
+    position: absolute;
+    top: 4px;
+    left: 3px;
+    background: linear-gradient(135deg, #a8e6c8, #7fc9a8);
+    color: white;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(180deg);
+    font-family: sans-serif;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(120, 180, 140, 0.5);
+    z-index: 2;
+  }
+
+  .delete-btn {
+    position: absolute;
+    top: -7px;
+    right: -5px;
+    transform: rotate(180deg);
+    background: linear-gradient(135deg, #ffb3c8, #f5a3c0);
+    color: white;
+    border: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    font-family: sans-serif;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(220, 150, 180, 0.6);
+    z-index: 15;
+  }
+  .book:hover .delete-btn,
+  .book:active .delete-btn { opacity: 1; }
+  .delete-btn:hover { transform: rotate(180deg) scale(1.2); }
+
+  .empty-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #d0bfd8;
+    font-style: italic;
+    font-size: 0.85em;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* ====== КОТЁНОК ====== */
+  .cat-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 170px;
+    pointer-events: none;
+    z-index: 100;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding-left: 25px;
+  }
+
+  .cat-container {
+    position: relative;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: catBob 3s ease-in-out infinite;
+  }
+
+  @keyframes catBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  .speech-bubble {
+    position: absolute;
+    bottom: 105px;
+    left: 60px;
+    background: #ffffff;
+    border: 2px solid #f0d5e8;
+    border-radius: 16px;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #a56c96;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(200, 160, 200, 0.35);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  }
+  .speech-bubble.show { opacity: 1; transform: translateY(0); }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 20px;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 12px solid #ffffff;
+  }
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    left: 18px;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 14px solid #f0d5e8;
+    z-index: -1;
+  }
+
+  .cat { width: 120px; height: 130px; position: relative; }
+
+  .cat-body {
+    position: absolute;
+    bottom: 0;
+    left: 15px;
+    width: 90px;
+    height: 70px;
+    background: linear-gradient(160deg, #ffe6f0 0%, #ffd0e4 100%);
+    border-radius: 45px 45px 25px 25px;
+    box-shadow: 
+      inset -8px -5px 15px rgba(220, 150, 190, 0.3),
+      inset 5px 5px 10px rgba(255, 255, 255, 0.7),
+      0 6px 14px rgba(200, 150, 190, 0.3);
+  }
+
+  .cat-head {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    width: 80px;
+    height: 72px;
+    background: linear-gradient(160deg, #ffe6f0 0%, #ffd0e4 100%);
+    border-radius: 50% 50% 45% 45%;
+    box-shadow: 
+      inset -6px -4px 12px rgba(220, 150, 190, 0.3),
+      inset 5px 5px 8px rgba(255, 255, 255, 0.7);
+  }
+
+  .cat-ear {
+    position: absolute;
+    top: 5px;
+    width: 0;
+    height: 0;
+    border-left: 16px solid transparent;
+    border-right: 16px solid transparent;
+    border-bottom: 28px solid #ffd0e4;
+    filter: drop-shadow(-2px -2px 3px rgba(220, 150, 190, 0.3));
+  }
+  .cat-ear.left { left: 18px; transform: rotate(-15deg); }
+  .cat-ear.right { right: 18px; transform: rotate(15deg); }
+  .cat-ear::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: -8px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 14px solid #ffb3d1;
+  }
+
+  .cat-eye {
+    position: absolute;
+    top: 32px;
+    width: 14px;
+    height: 16px;
+    background: #5a4a5e;
+    border-radius: 50%;
+    transition: transform 0.15s;
+  }
+  .cat-eye::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    width: 5px;
+    height: 5px;
+    background: white;
+    border-radius: 50%;
+  }
+  .cat-eye.left { left: 18px; }
+  .cat-eye.right { right: 18px; }
+
+  .cat-nose {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #ff9eb8;
+  }
+
+  .cat-mouth {
+    position: absolute;
+    top: 55px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 8px;
+    border-bottom: 2px solid #d47a9a;
+    border-radius: 0 0 50% 50%;
+  }
+
+  .cat-blush {
+    position: absolute;
+    top: 45px;
+    width: 12px;
+    height: 8px;
+    background: radial-gradient(ellipse, rgba(255, 150, 180, 0.6), transparent);
+    border-radius: 50%;
+  }
+  .cat-blush.left { left: 8px; }
+  .cat-blush.right { right: 8px; }
+
+  .cat-whisker {
+    position: absolute;
+    width: 18px;
+    height: 1px;
+    background: #d0a0b8;
+    top: 52px;
+  }
+  .cat-whisker.l1 { left: -6px; transform: rotate(-10deg); }
+  .cat-whisker.l2 { left: -6px; top: 58px; transform: rotate(8deg); }
+  .cat-whisker.r1 { right: -6px; transform: rotate(10deg); }
+  .cat-whisker.r2 { right: -6px; top: 58px; transform: rotate(-8deg); }
+
+  .cat-paw {
+    position: absolute;
+    bottom: 3px;
+    width: 22px;
+    height: 14px;
+    background: linear-gradient(180deg, #ffd0e4, #ffb8d4);
+    border-radius: 50% 50% 40% 40%;
+    box-shadow: inset 0 -2px 3px rgba(200, 130, 170, 0.3);
+  }
+  .cat-paw.left { left: 22px; }
+  .cat-paw.right { right: 22px; }
+
+  .cat-tail {
+    position: absolute;
+    bottom: 10px;
+    right: -12px;
+    width: 40px;
+    height: 40px;
+    border: 8px solid #ffd0e4;
+    border-color: transparent transparent #ffd0e4 transparent;
+    border-radius: 50%;
+    transform: rotate(-45deg);
+    animation: tailWag 2s ease-in-out infinite;
+    transform-origin: left bottom;
+  }
+  @keyframes tailWag {
+    0%, 100% { transform: rotate(-45deg); }
+    50% { transform: rotate(-25deg); }
+  }
+
+  .heart {
+    position: fixed;
+    font-size: 18px;
+    animation: heartFloat 1.2s ease-out forwards;
+    pointer-events: none;
+    z-index: 200;
+  }
+  @keyframes heartFloat {
+    0% { opacity: 1; transform: translateY(0) scale(0.8); }
+    100% { opacity: 0; transform: translateY(-80px) scale(1.4); }
+  }
+
+  @media (max-width: 700px) {
+    body { padding: 15px 10px 180px; }
+    h1 { font-size: 1.6em; }
+    .library { flex-direction: column; align-items: center; }
+    .bookcase { width: 100%; max-width: 100%; min-width: auto; }
+    .cat-area { padding-left: 15px; height: 150px; }
+    .cat { transform: scale(0.85); }
+    .speech-bubble { bottom: 90px; left: 50px; font-size: 12px; }
+    .book { width: 30px; height: 100px; }
+  }
+
+  .hint {
+    text-align: center;
+    color: #a89ab0;
+    font-size: 0.85em;
+    margin-top: 20px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+  <h1>📚 Моя библиотека</h1>
+  <p class="subtitle">Добавляй книги — они встанут на полки ✨</p>
+
+  <div class="input-area">
+    <input type="text" id="bookInput" placeholder="Название книги..." maxlength="60">
+    <button class="add-btn" onclick="addBook()">Добавить</button>
+  </div>
+
+  <div class="library">
+    <div class="bookcase" id="unreadCase">
+      <div class="case-title">
+        📖 Непрочитанные
+        <span class="counter" id="unreadCount">0</span>
+      </div>
+    </div>
+    <div class="bookcase" id="readCase">
+      <div class="case-title">
+        ✨ Прочитанные
+        <span class="counter" id="readCount">0</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint">Кликни на книгу — отметить прочитанной. Наведи и нажми ✕ — удалить.</p>
+
+  <div class="cat-area">
+    <div class="cat-container" id="catContainer">
+      <div class="speech-bubble" id="bubble"></div>
+      <div class="cat">
+        <div class="cat-tail"></div>
+        <div class="cat-body"></div>
+        <div class="cat-paw left"></div>
+        <div class="cat-paw right"></div>
+        <div class="cat-head">
+          <div class="cat-ear left"></div>
+          <div class="cat-ear right"></div>
+          <div class="cat-eye left"></div>
+          <div class="cat-eye right"></div>
+          <div class="cat-blush left"></div>
+          <div class="cat-blush right"></div>
+          <div class="cat-whisker l1"></div>
+          <div class="cat-whisker l2"></div>
+          <div class="cat-whisker r1"></div>
+          <div class="cat-whisker r2"></div>
+          <div class="cat-nose"></div>
+          <div class="cat-mouth"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const PASTEL_COLORS = [
+    'linear-gradient(180deg, #ffd6e8, #ffb3d1)',
+    'linear-gradient(180deg, #c8e6ff, #a3d0f5)',
+    'linear-gradient(180deg, #e0d4ff, #c8b3f0)',
+    'linear-gradient(180deg, #c8f5e0, #a3e6c8)',
+    'linear-gradient(180deg, #fff0c8, #ffe0a3)',
+    'linear-gradient(180deg, #ffd4d4, #ffb8b8)',
+    'linear-gradient(180deg, #d4f0ff, #b8e0f5)',
+    'linear-gradient(180deg, #f5d4ff, #e0b3f0)',
+    'linear-gradient(180deg, #d4ffe0, #b3f0c8)',
+    'linear-gradient(180deg, #ffe0d4, #ffc8b8)',
+    'linear-gradient(180deg, #d4e0ff, #b8c8f0)',
+    'linear-gradient(180deg, #ffe8f5, #ffd0e8)',
+  ];
+
+  const BOOKS_PER_SHELF = 10;
+  const MIN_SHELVES = 4;
+
+  let books = JSON.parse(localStorage.getItem('myBooksLibrary')) || [];
+
+  function save() {
+    localStorage.setItem('myBooksLibrary', JSON.stringify(books));
+  }
+
+  function addBook() {
+    const input = document.getElementById('bookInput');
+    const title = input.value.trim();
+    if (!title) return;
+
+    books.push({
+      id: Date.now(),
+      title: title,
+      read: false,
+      colorIndex: Math.floor(Math.random() * PASTEL_COLORS.length)
+    });
+
+    input.value = '';
+    input.focus();
+    save();
+    render();
+
+    showBubble(['Ура!', 'Новая книга!', 'Мур~', 'Класс!', 'Люблю читать!'][Math.floor(Math.random()*5)]);
+  }
+
+  function toggleRead(id) {
+    const book = books.find(b => b.id === id);
+    if (book) {
+      book.read = !book.read;
+      save();
+      render();
+      if (book.read) {
+        showBubble(['Молодец!', 'Прочитано!', 'Умница~', 'Мур-мур!'][Math.floor(Math.random()*4)]);
+      }
+    }
+  }
+
+  function deleteBook(id, event) {
+    event.stopPropagation();
+    books = books.filter(b => b.id !== id);
+    save();
+    render();
+    showBubble(['Ой...', 'Ладно~', 'Мяу?'][Math.floor(Math.random()*3)]);
+  }
+
+  function render() {
+    const unreadCase = document.getElementById('unreadCase');
+    const readCase = document.getElementById('readCase');
+
+    Array.from(unreadCase.querySelectorAll('.shelf-wrapper, .empty-hint')).forEach(el => el.remove());
+    Array.from(readCase.querySelectorAll('.shelf-wrapper, .empty-hint')).forEach(el => el.remove());
+
+    const unread = books.filter(b => !b.read);
+    const read = books.filter(b => b.read);
+
+    buildCase(unreadCase, unread);
+    buildCase(readCase, read);
+
+    document.getElementById('unreadCount').textContent = unread.length;
+    document.getElementById('readCount').textContent = read.length;
+  }
+
+  function buildCase(container, bookList) {
+    const shelves = [];
+    for (let i = 0; i < bookList.length; i += BOOKS_PER_SHELF) {
+      shelves.push(bookList.slice(i, i + BOOKS_PER_SHELF));
+    }
+    while (shelves.length < MIN_SHELVES) shelves.push([]);
+
+    shelves.forEach((shelfBooks, idx) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'shelf-wrapper';
+      const shelf = document.createElement('div');
+      shelf.className = 'shelf';
+
+      if (shelfBooks.length === 0 && idx === 0 && bookList.length === 0) {
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.textContent = '— пусто —';
+        shelf.appendChild(hint);
+      }
+
+      shelfBooks.forEach(b => shelf.appendChild(createBookEl(b)));
+      wrapper.appendChild(shelf);
+      container.appendChild(wrapper);
+    });
+  }
+
+  function createBookEl(book) {
+    const el = document.createElement('div');
+    el.className = 'book' + (book.read ? ' read' : '');
+    el.style.background = PASTEL_COLORS[book.colorIndex] || PASTEL_COLORS[0];
+    el.title = book.title + (book.read ? ' (прочитано)' : '');
+
+    const span = document.createElement('span');
+    span.textContent = book.title;
+    el.appendChild(span);
+
+    const del = document.createElement('button');
+    del.className = 'delete-btn';
+    del.textContent = '✕';
+    del.onclick = (e) => deleteBook(book.id, e);
+    el.appendChild(del);
+
+    el.onclick = () => toggleRead(book.id);
+    return el;
+  }
+
+  document.getElementById('bookInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addBook();
+  });
+
+  // ====== КОТЁНОК ======
+  const PHRASES_IDLE = [
+    'Привет!', 'Мур~', 'Мяу!', 'Читаешь?', 'Ещё книгу?',
+    'Люблю книги', 'Как дела?', 'Приветик!', 'Мур-мур',
+    'Что читаешь?', 'Мяу-мяу', 'Скучно~'
+  ];
+
+  let bubbleTimer = null;
+
+  function showBubble(text) {
+    const bubble = document.getElementById('bubble');
+    bubble.textContent = text;
+    bubble.classList.add('show');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => bubble.classList.remove('show'), 2200);
+  }
+
+  setInterval(() => {
+    if (Math.random() < 0.5) {
+      showBubble(PHRASES_IDLE[Math.floor(Math.random() * PHRASES_IDLE.length)]);
+    }
+  }, 7000);
+
+  document.getElementById('catContainer').addEventListener('click', function(e) {
+    showBubble(['Мяу!', 'Мур~', 'Привет!', 'Хи-хи', 'Гладишь?'][Math.floor(Math.random()*5)]);
+    this.style.animation = 'none';
+    setTimeout(() => { this.style.animation = 'catBob 3s ease-in-out infinite'; }, 10);
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => spawnHeart(e.clientX, e.clientY), i * 120);
+    }
+  });
+
+  function spawnHeart(x, y) {
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+    heart.textContent = ['💖', '💕', '💗', '🌸'][Math.floor(Math.random()*4)];
+    heart.style.left = (x - 10 + Math.random() * 30 - 15) + 'px';
+    heart.style.top = (y - 20) + 'px';
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 1200);
+  }
+
+  setTimeout(() => showBubble('Привет!'), 600);
+
+  render();
+
+  // ====== PWA ======
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
+</body>
+</html>
